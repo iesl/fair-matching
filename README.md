@@ -38,7 +38,7 @@ Then, initialize the project with
 `source bin/setup.sh`
 
 All experiments are intended to be run from the same top-level directory.  Each
-can be run run similarly. To run _FairIR_ on the MIDL data, run
+can be run similarly. To run _FairIR_ on the MIDL data, run
 
 `sh bin/exp/fairir.sh config/midl/fairir.json`
 
