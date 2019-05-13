@@ -15,7 +15,8 @@ exceeds a problem specific thresholds. This repository includes our
 implementation of both algorithms, plus some of the data needed to reproduce our
 experimental results. More technical details appear in our forthcoming paper.
 
-####Dependencies
+###Dependencies
+
 Both the algorithms are implemented in the python (3.6) programming language.
 
 Our code is built on top of two libraries. The first is 
@@ -29,7 +30,7 @@ use pip:
 
 `pip install py3-ortools`
 
-####Experiments
+###Experiments
 
 To begin, change directory to the top level directory (under fair-matching).
 Then, initialize the project with
@@ -41,5 +42,12 @@ can be run run similarly. To run _FairIR_ on the MIDL data, run
 
 `sh bin/exp/fairir.sh config/midl/fairir.json`
 
+To run the experiment with lower bounds, run
+
+`sh bin/exp/fairir.sh config/midl/fairir-lb.json`
+
 The results of the run are stored in timestamped directory inside of the
-`exp_out` directory.  
+`exp_out` directory.  To create boxplots of the paper scores as appear in our
+paper, find the timestamped directory and run, e.g.,
+
+`sh bin/plot/boxplot.sh exp_out/midl/fairir/2019-05-13-14-51-51/`
