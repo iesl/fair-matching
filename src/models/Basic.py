@@ -91,9 +91,7 @@ class Basic(object):
         Returns:
             An np array corresponding to the solution.
         """
-        start = time.time()
         self.m.optimize()
-        print('Time to solve %s' % (time.time() - start))
         if self.m.status == GRB.OPTIMAL:
             self.solution = self.sol_as_mat()
         return self.solution
