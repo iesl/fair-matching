@@ -11,7 +11,7 @@ class FairIR(Basic):
 
     """
 
-    def __init__(self, loads, loads_lb, coverages, weights, makespan=0):
+    def __init__(self, loads, loads_lb, coverages, weights):
         """Initialize.
 
         Args:
@@ -24,7 +24,6 @@ class FairIR(Basic):
             weights - the affinity matrix (np.array) of papers to reviewers.
                    Rows correspond to reviewers and columns correspond to
                    papers.
-            makespan - optional initial makespan value.
 
             Returns:
                 initialized makespan matcher.
@@ -37,7 +36,7 @@ class FairIR(Basic):
         self.weights = weights
         self.id = uuid.uuid4()
         self.m = Model("%s : FairIR" % str(self.id))
-        self.makespan = makespan or 0.0
+        self.makespan = 0.0
         self.solution = None
 
         self.m.setParam('OutputFlag', 0)
@@ -177,7 +176,7 @@ class FairIR(Basic):
         start = time.time()
         self.m.optimize()
         print('#info FairIR:Time to solve %s' % (time.time() - start))
-        for i in range(5):
+        for i in range(10):
             print('#info FairIR:ITERATION %s ms %s' % (i, ms))
             if self.m.status == GRB.INFEASIBLE:
                 mx = ms
@@ -192,7 +191,7 @@ class FairIR(Basic):
             self.m.optimize()
         return best
 
-    def solve(self, mn=0, mx=-1, itr=10):
+    def solve(self):
         """Find a makespan and solve the ILP.
 
         Run a binary search to find an appropriate makespan and then solve the
