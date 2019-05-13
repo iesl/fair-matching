@@ -1,0 +1,11 @@
+{
+  "dataset_name": "midl",
+  "match_model": "irda",
+  "score_f": "data/midl/scores.npy",
+  "cov_f": "data/midl/covs.npy",
+  "load_f": "data/midl/loads.npy",
+  "experiment_out_dir": "exp_out",
+  "random_seed": 2139,
+  "threads": 12,
+  "debug": false
+}
