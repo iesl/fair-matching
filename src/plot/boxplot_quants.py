@@ -41,7 +41,7 @@ if __name__ == '__main__':
         assignment = np.load(os.path.join(config_dir, 'results',
                                           'assignment.npy'))
         match_scores = np.sum(assignment * scores, axis=0)
-        max_possible = np.max(scores) * np.max(np.sum(assignment, axis=1))
+        max_possible = np.max(scores) * np.max(np.sum(assignment, axis=0))
         sorted_scores = sorted(match_scores)
         num_papers = np.size(sorted_scores)
         scores_per_quant = int(np.floor(num_papers / num_quantiles) + 1)
@@ -57,6 +57,7 @@ if __name__ == '__main__':
         # Create Figure.
         fig, ax = plt.subplots(1, 1)
         bps = ax.boxplot(quants, 0, 'rx')
+        ax.set_title(config.match_model)
         ax.set_ylabel('Paper Score')
         ax.set_xlabel('Quintile')
         ax.set_ylim(bottom=0.0, top=max_possible)

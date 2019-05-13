@@ -1,9 +1,10 @@
 {
   "dataset_name": "midl",
-  "match_model": "fairir",
+  "match_model": "fairir-lb",
   "score_f": "data/midl/scores.npy",
   "cov_f": "data/midl/covs.npy",
   "load_f": "data/midl/loads.npy",
+  "load_lb_f": "data/midl/loads-lb.npy",
   "experiment_out_dir": "exp_out",
   "random_seed": 2139,
   "threads": 12,

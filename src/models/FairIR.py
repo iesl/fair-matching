@@ -57,7 +57,7 @@ class FairIR(Basic):
                 self.lp_vars[i].append(self.m.addVar(ub=1.0,
                                                      name=self.var_name(i, j)))
         self.m.update()
-        print('Time to add vars %s' % (time.time() - start))
+        print('#info FairIR:Time to add vars %s' % (time.time() - start))
 
         start = time.time()
         # set the objective
@@ -66,7 +66,7 @@ class FairIR(Basic):
             for j in range(self.n_pap):
                 obj += self.weights[i][j] * self.lp_vars[i][j]
         self.m.setObjective(obj, GRB.MAXIMIZE)
-        print('Time to set obj %s' % (time.time() - start))
+        print('#info FairIR:Time to set obj %s' % (time.time() - start))
 
         start = time.time()
         # load upper bound constraints.
@@ -92,7 +92,7 @@ class FairIR(Basic):
                                   for i in range(self.n_rev)]) >= self.makespan,
                              self.ms_constr_name(p))
         self.m.update()
-        print('Time to add constr %s' % (time.time() - start))
+        print('#info FairIR:Time to add constr %s' % (time.time() - start))
 
     def ms_constr_name(self, p):
         """Name of the makespan constraint for paper p."""
@@ -151,11 +151,8 @@ class FairIR(Basic):
                    sol[self.var_name(i, j)] == 0.0
                    for i in range(self.n_rev) for j in range(self.n_pap))
 
-    def fix_assignment(self, i, j, val, log_file=None):
+    def fix_assignment(self, i, j, val):
         """Round the variable x_ij to val."""
-        if log_file:
-            logging.info("\tROUNDING (REVIEWER, PAPER) %s TO VAL: %s" % (
-                 str((i, j)), str(val)))
         self.lp_vars[i][j].ub = val
         self.lp_vars[i][j].lb = val
 
@@ -175,41 +172,27 @@ class FairIR(Basic):
         mn = 0.0
         mx = np.max(self.weights) * np.max(self.coverages)
         ms = mx
-        # ms = 24.974999999999998  # mx
-        # ms = 0.7
         best = None
         self.change_makespan(ms)
-        # self.change_makespan(16.65)
         start = time.time()
         self.m.optimize()
-        print('Time to solve %s' % (time.time() - start))
+        print('#info FairIR:Time to solve %s' % (time.time() - start))
         for i in range(5):
-            print('ITERATION %s ms %s' % (i, ms))
+            print('#info FairIR:ITERATION %s ms %s' % (i, ms))
             if self.m.status == GRB.INFEASIBLE:
                 mx = ms
                 ms -= (ms - mn) / 2.0
             else:
-                print(ms, self.objective_val())
-                print(self.sol_as_mat())
                 assert(best is None or ms > best)
                 assert(self.m.status == GRB.OPTIMAL)
                 best = ms
                 mn = ms
                 ms += (mx - ms) / 2.0
-            print('starting change_makespan')
-            start = time.time()
             self.change_makespan(ms)
-            print('Time to change makespan %s' % (time.time() - start))
-            print('starting optimize')
-            start = time.time()
             self.m.optimize()
-            print('Time to solve %s' % (time.time() - start))
-            print('ending optimize')
-        print('Best found %s' % best)
         return best
 
-    # find an appropriate makespan using binary search and solve
-    def solve(self, mn=0, mx=-1, itr=10, log_file=None):
+    def solve(self, mn=0, mx=-1, itr=10):
         """Find a makespan and solve the ILP.
 
         Run a binary search to find an appropriate makespan and then solve the
@@ -224,44 +207,48 @@ class FairIR(Basic):
         Returns:
             The solution as a matrix.
         """
-        # TODO(AK)): Does this even do anything?
-        # for c in self.m.getConstrs():
-        #     if c.ConstrName.startswith(self.round_constr_prefix):
-        #         print("SURPRISE! REMOVING A CONSTRAINT: %s" % str(c))
-        #         self.m.remove(c)
-        #         assert(False)
-
         ms = self.find_ms()
-        # ms = 16.65
-        # ms = 24.974999999999998
-        # ms = 18.73125
-        # ms = 22.22
-        # ms = 16.52
         self.change_makespan(ms)
-
-        begin_opt = time.time()
-        self.round_fractional(np.ones((self.n_rev, self.n_pap)) * -1, log_file)
-        end_opt = time.time()
-        if log_file:
-            logging.info('#solver-time\t%s' % (str(end_opt - begin_opt)))
+        self.round_fractional(np.ones((self.n_rev, self.n_pap)) * -1)
 
         sol = {}
         for v in self.m.getVars():
             sol[v.varName] = v.x
 
-        if log_file:
-            logging.info('#obj\t%f' % self.objective_val())
+    def sol_as_dict(self):
+        """Return the solution to the optimization as a dictionary.
 
-    def round_fractional(self, integral_assignments=None, log_file=None,
-                         count=0):
+        If the matching has not be solved optimally or suboptimally, then raise
+        an exception.
+
+        Args:
+            None.
+
+        Returns:
+            A dictionary from var_name to value (either 0 or 1)
+        """
+        if self.m.status == GRB.OPTIMAL or self.m.status == GRB.SUBOPTIMAL:
+            _sol = {}
+            for v in self.m.getVars():
+                _sol[v.varName] = v.x
+            return _sol
+        else:
+            raise Exception(
+                'You must have solved the model optimally or suboptimally '
+                'before calling this function.\nSTATUS %s\tMAKESPAN %f' % (
+                    self.m.status, self.makespan))
+
+    def round_fractional(self, integral_assignments=None, count=0):
         """Round a fractional solution.
 
         This is the meat of the iterative relaxation approach.  First, if the
         solution to the relaxed LP is integral, then we're done--return the
         solution. Otherwise, here's what we do:
         1. if a variable is integral, lock it's value to that integer.
-        2. find one paper with exactly 2 fractionally assigned reviewers and
+        2. find all papers with exactly 2 or 3 fractionally assigned revs and
            drop the makespan constraint on that reviewer.
+        3. if no makespan constraints dropped, find a reviewer with exactly two
+           fraction assignments and drop the load constraints on that reviewer.
 
         Args:
             integral_assignments - np.array of revs x paps (initially None).
@@ -277,18 +264,12 @@ class FairIR(Basic):
 
         self.m.optimize()
 
-        print("FINSHED OPTIMIZTION")
-
         if self.m.status != GRB.OPTIMAL and self.m.status != GRB.SUBOPTIMAL:
             assert False, '%s\t%s' % (self.m.status, self.makespan)
 
         if self.integral_sol_found():
-            if log_file:
-                logging.info('[#ITERATIONS]: %d' % count)
             return
         else:
-            if log_file:
-                logging.info('[BEGIN ROUNDING ITERATION]: %d' % count)
             frac_assign_p = {}
             frac_assign_r = {}
             sol = self.sol_as_dict()
@@ -304,12 +285,12 @@ class FairIR(Basic):
 
                     if sol[self.var_name(i, j)] == 0.0 and \
                                     integral_assignments[i][j] != 0.0:
-                        self.fix_assignment(i, j, 0.0, log_file)
+                        self.fix_assignment(i, j, 0.0)
                         integral_assignments[i][j] = 0.0
 
                     elif sol[self.var_name(i, j)] == 1.0 and \
                                     integral_assignments[i][j] != 1.0:
-                        self.fix_assignment(i, j, 1.0, log_file)
+                        self.fix_assignment(i, j, 1.0)
                         integral_assignments[i][j] = 1.0
 
                     elif sol[self.var_name(i, j)] != 1.0 and \
@@ -340,8 +321,7 @@ class FairIR(Basic):
                                     c.ConstrName == self.llb_constr_name(rev):
                                 self.m.remove(c)
             self.m.update()
-            return self.round_fractional(integral_assignments, log_file,
-                                         count + 1)
+            return self.round_fractional(integral_assignments, count + 1)
 
 
 if __name__ == "__main__":
