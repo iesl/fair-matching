@@ -30,6 +30,7 @@ if __name__ == "__main__":
     config.random = rand
     print('#info random seed %s' % config.random_seed)
     debug = config.debug
+    fairness_threshold = config.fairness_threshold
     assert(config.match_model == 'fairir' or
            config.match_model == 'fairir-lb')
 
@@ -46,7 +47,7 @@ if __name__ == "__main__":
     mkdir_p(output_dir)
 
     # Solve.
-    mm = FairIR(loads, loads_lb, covs, scores)
+    mm = FairIR(loads, loads_lb, covs, scores, fairness_threshold)
     s = time.time()
     mm.solve()
     t = time.time() - s

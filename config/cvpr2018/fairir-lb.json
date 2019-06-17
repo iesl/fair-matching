@@ -1,0 +1,13 @@
+{
+  "dataset_name": "cvpr2018",
+  "match_model": "fairir-lb",
+  "score_f": "data/cvpr2018/scores.npy",
+  "cov_f": "data/cvpr2018/covs.npy",
+  "load_f": "data/cvpr2018/loads.npy",
+  "load_lb_f": "data/cvpr2018/loads-lb.npy",
+  "fairness_threshold": 16.65,
+  "experiment_out_dir": "exp_out",
+  "random_seed": 2139,
+  "threads": 12,
+  "debug": false
+}

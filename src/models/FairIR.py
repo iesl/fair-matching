@@ -11,7 +11,7 @@ class FairIR(Basic):
 
     """
 
-    def __init__(self, loads, loads_lb, coverages, weights):
+    def __init__(self, loads, loads_lb, coverages, weights, thresh=0.0):
         """Initialize.
 
         Args:
@@ -36,7 +36,7 @@ class FairIR(Basic):
         self.weights = weights
         self.id = uuid.uuid4()
         self.m = Model("%s : FairIR" % str(self.id))
-        self.makespan = 0.0
+        self.makespan = thresh
         self.solution = None
 
         self.m.setParam('OutputFlag', 0)
@@ -206,7 +206,12 @@ class FairIR(Basic):
         Returns:
             The solution as a matrix.
         """
-        ms = self.find_ms()
+        if self.makespan <= 0:
+            print('#info FairIR: searching for fairness threshold')
+            ms = self.find_ms()
+        else:
+            print('#info FairIR: config fairness threshold: %s' % self.makespan)
+            ms = self.makespan
         self.change_makespan(ms)
         self.round_fractional(np.ones((self.n_rev, self.n_pap)) * -1)
 

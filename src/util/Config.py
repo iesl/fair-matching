@@ -33,7 +33,7 @@ class Config(object):
         self.load_lb_f = None
 
         # Params
-        self.makespan = None
+        self.fairness_threshold = 0.0
 
         # IO
         self.experiment_out_dir = 'exp_out'
