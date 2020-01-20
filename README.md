@@ -13,7 +13,7 @@ fairly assigning reviewers to papers.  In particular, both algorithms attempt to
 guarantee that the sum of affinities among the reviewers assigned to all papers
 exceeds a problem specific thresholds. This repository includes our
 implementation of both algorithms, plus some of the data needed to reproduce our
-experimental results. More technical details appear in our KDD 2019 paper: [arXiv](https://arxiv.org/abs/1905.11924) (official version available soon!).
+experimental results. More technical details appear in our KDD 2019 paper: [KDD](https://dl.acm.org/doi/10.1145/3292500.3330899) [arXiv](https://arxiv.org/abs/1905.11924).
 
 #### Dependencies
 
